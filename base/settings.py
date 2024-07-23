@@ -1,7 +1,8 @@
 from pathlib import Path
 from datetime import timedelta
-# from decouple import config
+from decouple import config
 import os
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -128,12 +129,12 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_HOST_USER = 'procodestockkeep@gmail.com'
-# EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'procodestockkeep@gmail.com'
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 
 # FRONTEND_BASE_URL = os.getenv('FRONTEND_BASE_URL', 'http://localhost:5317')
 
@@ -145,3 +146,4 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
 
 ]
+

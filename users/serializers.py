@@ -37,43 +37,17 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
-class ResetPasswordEmailSerializer(serializers.Serializer):
+class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
 
 
 
-class ResetPasswordSerializer(serializers.Serializer):
-    """
-    Reset Password Serializer.
-    """
+class PasswordResetSerializer(serializers.Serializer):
 
-    new_password = serializers.CharField(write_only=True,min_length=1)
+    new_password = serializers.CharField(write_only=True, min_length=8, max_length=128)
+    token = serializers.CharField()
 
-    class Meta:
-        field = ("new_password")
-
-    def validate(self, data):
-        """
-        Verify token and encoded_pk and then set new password.
-        """
-        password = data.get("new_password")
-        print(password)
-        token = self.context.get("kwargs").get("token")
-        encoded_pk = self.context.get("kwargs").get("encoded_pk")
-
-        if token is None or encoded_pk is None:
-            raise serializers.ValidationError("Missing data.")
-
-        pk = urlsafe_base64_decode(encoded_pk).decode()
-        print(pk)
-        user = User.objects.get(pk=pk)
-        if not PasswordResetTokenGenerator().check_token(user, token):
-            raise serializers.ValidationError("The reset token is invalid")
-        print(user)
-        user.set_password(password)
-        user.save()
-        return data
 
 class NewPasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
