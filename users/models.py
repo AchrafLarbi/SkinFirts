@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+import random
 
 class MyUserManager(BaseUserManager):
 
@@ -47,7 +48,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff    = models.BooleanField(default=False, null=False)
     # image = models.ImageField(upload_to='images/', default='images/default_profile.jpg')
     # token = models.CharField(max_length=255, default="",blank=True, null=True)
-
+    otp = models.CharField(max_length=6, null=True, blank=True)
+    
     objects = MyUserManager()
 
     USERNAME_FIELD  = 'email'
@@ -62,3 +64,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def str(self):
         return self.email
+    
+    def save(self, *args, **kwargs):
+        number_list = [x for x in range(10)]  # Use of list comprehension
+        code_items_for_otp = []
+
+        for i in range(6):
+            num = random.choice(number_list)
+            code_items_for_otp.append(num)
+
+        code_string = "".join(str(item) for item in code_items_for_otp)  # list comprehension again
+        # A six digit random number from the list will be saved in top field
+        self.otp = code_string
+        super().save(*args, **kwargs)
