@@ -1,4 +1,5 @@
 
+from datetime import date
 from django.db import models
 from users.models import User
 
@@ -20,13 +21,13 @@ class Doctor(models.Model):
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     degree = models.CharField(max_length=255)
     specialization = models.ForeignKey(Specialization, on_delete=models.SET_NULL, null=True)
-    experience_years = models.PositiveIntegerField()
+    begin_of_work = models.DateField() # Date when the doctor started working like 2021-01-01
+    experience_years = models.PositiveIntegerField(null=True, blank=True)
     rating = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(5.0)])
     reviews_count = models.PositiveIntegerField(default=0)
     available_days = models.JSONField(blank=True, null=True) # {day: 'day_name'}
     available_hours = models.JSONField(blank=True,null=True) # {day: {start: 'hh:mm', end: 'hh:mm'}}
     bio = models.TextField(blank=True)
-    career_path = models.TextField(blank=True)
     highlights = models.TextField(blank=True)
 
     def __str__(self):
@@ -41,6 +42,17 @@ class Doctor(models.Model):
             self.reviews_count = 0
             self.rating = 0.0
         self.save()
+
+    def calculate_experience_years(self):
+        today = date.today()
+        self.experience_years = abs(today.year - self.begin_of_work.year)
+
+    def save(self, *args, **kwargs):
+        self.calculate_experience_years()
+        super().save(*args, **kwargs)
+
+    # Update doctor rating and review count whenever a review is deleted
+
 
 class Review(models.Model):
     doctor = models.ForeignKey(Doctor, related_name='reviews', on_delete=models.CASCADE)
