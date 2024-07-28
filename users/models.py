@@ -46,7 +46,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name   = models.CharField(max_length=50, null=True, blank=True)
     is_active   = models.BooleanField(default=True, null=False)
     is_staff    = models.BooleanField(default=False, null=False)
-    # image = models.ImageField(upload_to='images/', default='images/default_profile.jpg')
+    image = models.ImageField(upload_to='images/', default='images/default_profile.JPG', blank=True, null=True)
     # token = models.CharField(max_length=255, default="",blank=True, null=True)
     otp = models.CharField(max_length=6, null=True, blank=True)
     
