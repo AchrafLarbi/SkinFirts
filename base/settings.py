@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'users',
     'doctor',
     'rest_framework',
+    'drf_yasg',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
