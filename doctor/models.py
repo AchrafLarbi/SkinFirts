@@ -23,7 +23,8 @@ class Doctor(models.Model):
     specialization = models.ForeignKey(Specialization, on_delete=models.SET_NULL, null=True)
     begin_of_work = models.DateField() # Date when the doctor started working like 2021-01-01
     experience_years = models.PositiveIntegerField(null=True, blank=True)
-    rating = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(5.0)])
+    # rating = models.FloatField(default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(5.0)])
+    rating = models.DecimalField(default=0.0, max_digits=3, decimal_places=1, validators=[MinValueValidator(0.0), MaxValueValidator(5.0)])
     reviews_count = models.PositiveIntegerField(default=0)
     available_days = models.JSONField(blank=True, null=True) # {day: 'day_name'}
     available_hours = models.JSONField(blank=True,null=True) # {day: {start: 'hh:mm', end: 'hh:mm'}}
