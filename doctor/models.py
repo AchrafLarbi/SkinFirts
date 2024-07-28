@@ -73,5 +73,8 @@ class FavoriteDoctor(models.Model):
     user = models.ForeignKey(User, related_name='favorites', on_delete=models.CASCADE)
     doctor = models.ForeignKey(Doctor, related_name='favorited_by', on_delete=models.CASCADE)
 
+    class Meta:
+        unique_together = ('user', 'doctor')
+
     def __str__(self):
         return f"{self.user} favorited {self.doctor}"

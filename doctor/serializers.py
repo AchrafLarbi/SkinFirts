@@ -38,10 +38,33 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ['id', 'doctor', 'user', 'rating', 'comment']
 
+# class FavoriteDoctorSerializer(serializers.ModelSerializer):
+#     user = serializers.SlugRelatedField(slug_field='email', queryset=User.objects.all())
+#     doctor = serializers.SlugRelatedField(slug_field='id', queryset=Doctor.objects.all())
+
+#     class Meta:
+#         model = FavoriteDoctor
+#         fields = ['id', 'user', 'doctor']
+
 class FavoriteDoctorSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(slug_field='email', queryset=User.objects.all())
+    user = serializers.SlugRelatedField(slug_field='email', read_only=True)
     doctor = serializers.SlugRelatedField(slug_field='id', queryset=Doctor.objects.all())
 
     class Meta:
         model = FavoriteDoctor
         fields = ['id', 'user', 'doctor']
+
+    def create(self, validated_data):
+        request = self.context.get('request', None)
+        if request is not None:
+            user = request.user
+            validated_data['user'] = user
+        return super(FavoriteDoctorSerializer, self).create(validated_data)
+
+
+class FavoriteDoctorListSerializer(serializers.ModelSerializer):
+    doctor = serializers.SlugRelatedField(slug_field='id', read_only=True)
+
+    class Meta:
+        model = FavoriteDoctor
+        fields = ['doctor']
