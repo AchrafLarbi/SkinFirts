@@ -41,7 +41,7 @@ class SpecializationViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         serializer = SpecializationSerializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+    # 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = SpecializationSerializer(instance, data=request.data)
@@ -66,9 +66,12 @@ class DoctorViewSet(viewsets.ModelViewSet):
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = DoctorSerializer(queryset, many=True)
+        serializer = DoctorSerializer(queryset, many=True, context=self.get_serializer_context())
         if not serializer.data:
             error_response = {
                     "status": status.HTTP_404_NOT_FOUND,

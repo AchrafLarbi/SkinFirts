@@ -1,5 +1,5 @@
 from rest_framework.response import Response
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework import status
 from users.tokens import create_jwt_pair_for_user
 from .models import User
@@ -52,6 +52,10 @@ class ListCreateUser(ListCreateAPIView):
             }
             return Response(data=error_response, status=status.HTTP_400_BAD_REQUEST)
     
+
+class RetrieveUser(RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 class LoginView(APIView):
     def post(self, request: Request):

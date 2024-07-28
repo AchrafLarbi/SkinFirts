@@ -21,6 +21,15 @@ class DoctorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
         fields = ['id','name','lastname', 'profile_picture', 'degree', 'specialization','begin_of_work', 'experience_years', 'rating', 'reviews_count', 'available_days', 'available_hours', 'bio', 'highlights']
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        if request is not None:
+            profile_picture = representation.get('profile_picture')
+            if profile_picture:
+                representation['profile_picture'] = request.build_absolute_uri(profile_picture)
+        return representation
 
 class ReviewSerializer(serializers.ModelSerializer):
     doctor = serializers.SlugRelatedField(slug_field='id', queryset=Doctor.objects.all())
