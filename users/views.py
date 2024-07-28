@@ -170,15 +170,9 @@ class PasswordResetConfirmView(APIView):
             new_password = serializer.validated_data['new_password']
             try:
                 user = User.objects.get(otp=otp)
-                print(user.email)    
-                print(user.is_active)
                 user.set_password(new_password)
                 user.save()
-                user = authenticate(email=user.email, password=new_password)
-                if user is not None:
-                        return Response({'message': 'Password reset successful and verified'}, status=status.HTTP_200_OK)
-                else:
-                        return Response({'message': 'Password reset successful but verification failed'}, status=status.HTTP_200_OK)    
+                return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
             except User.DoesNotExist:
                 error_response = {
                     "status": status.HTTP_400_BAD_REQUEST,
