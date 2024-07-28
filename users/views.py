@@ -9,11 +9,21 @@ from rest_framework.request import Request
 from django.contrib.auth import authenticate, update_session_auth_hash
 from rest_framework.permissions import IsAuthenticated
 from django.core.mail import send_mail
-from django.urls import reverse
+import random
 from rest_framework_simplejwt.tokens import RefreshToken, UntypedToken
 from .serializers import PasswordResetRequestSerializer, PasswordResetSerializer
 from django.conf import settings
 
+def generate_otp():
+    number_list = [x for x in range(10)]  # Use of list comprehension
+    code_items_for_otp = []
+
+    for i in range(6):
+        num = random.choice(number_list)
+        code_items_for_otp.append(num)
+
+    code_string = "".join(str(item) for item in code_items_for_otp)
+    return code_string
 
 
 class ListCreateUser(ListCreateAPIView):
@@ -117,7 +127,6 @@ class ChangePasswordView(APIView):
             return Response(data=error_response, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class PasswordResetRequestView(APIView):
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
@@ -125,16 +134,15 @@ class PasswordResetRequestView(APIView):
             email = serializer.validated_data['email']
             try:
                 user = User.objects.get(email=email)
-                token = RefreshToken.for_user(user).access_token
-                reset_url = f'{request.build_absolute_uri(reverse("password-reset-confirm"))}?token={token}'
+                if user.otp is None:
+                    user.save()
 
                 subject = 'Password Reset Request'
-                message = f"Click the link to reset your password: {reset_url}" 
+                message = f'Here is the message with {user.otp}.'
                 email_from = settings.EMAIL_HOST_USER
-                recipient_list = [email ]
-    
-                send_mail( subject, message, email_from, recipient_list, fail_silently = False)
-                return Response({'message': 'Password reset link sent'}, status=status.HTTP_200_OK)
+                recipient_list = [email]
+                send_mail(subject, message, email_from, recipient_list, fail_silently=False)
+                return Response({'message': 'Password reset OTP sent'}, status=status.HTTP_200_OK)
             except User.DoesNotExist:
                 error_response = {
                     "status": status.HTTP_400_BAD_REQUEST,
@@ -153,29 +161,30 @@ class PasswordResetRequestView(APIView):
                 "errorMessage": error_message_str
             }
             return Response(data=error_response, status=status.HTTP_400_BAD_REQUEST)
-                
         
-
-
-
 class PasswordResetConfirmView(APIView):
     def post(self, request):
-        token = request.query_params.get('token')
-        serializer = PasswordResetSerializer(data={**request.data, 'token': token})
+        serializer = PasswordResetSerializer(data=request.data)
         if serializer.is_valid():
+            otp = serializer.validated_data['otp']
+            new_password = serializer.validated_data['new_password']
             try:
-                UntypedToken(token)
-                user_id = UntypedToken(token).payload['user_id']
-                user = User.objects.get(id=user_id)
-                user.set_password(serializer.validated_data['new_password'])
+                user = User.objects.get(otp=otp)
+                print(user.email)    
+                print(user.is_active)
+                user.set_password(new_password)
                 user.save()
-                return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
-            except Exception as e:
+                user = authenticate(email=user.email, password=new_password)
+                if user is not None:
+                        return Response({'message': 'Password reset successful and verified'}, status=status.HTTP_200_OK)
+                else:
+                        return Response({'message': 'Password reset successful but verification failed'}, status=status.HTTP_200_OK)    
+            except User.DoesNotExist:
                 error_response = {
                     "status": status.HTTP_400_BAD_REQUEST,
-                    "errorMessage": "Invalid token"
+                    "errorMessage": "Invalid OTP"
                 }
-                return Response(data=error_response ,status=status.HTTP_400_BAD_REQUEST)
+                return Response(data=error_response, status=status.HTTP_400_BAD_REQUEST)
         else:
             error_messages = []
             for field, errors in serializer.errors.items():
@@ -188,3 +197,76 @@ class PasswordResetConfirmView(APIView):
                 "errorMessage": error_message_str
             }
             return Response(data=error_response, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+# class PasswordResetRequestView(APIView):
+#     def post(self, request):
+#         serializer = PasswordResetRequestSerializer(data=request.data)
+#         if serializer.is_valid():
+#             email = serializer.validated_data['email']
+#             try:
+#                 user = User.objects.get(email=email)
+#                 token = RefreshToken.for_user(user).access_token
+#                 reset_url = f'{request.build_absolute_uri(reverse("password-reset-confirm"))}?token={token}'
+
+#                 subject = 'Password Reset Request'
+#                 message = f"Click the link to reset your password: {reset_url}" 
+#                 email_from = settings.EMAIL_HOST_USER
+#                 recipient_list = [email ]
+    
+#                 send_mail( subject, message, email_from, recipient_list, fail_silently = False)
+#                 return Response({'message': 'Password reset link sent'}, status=status.HTTP_200_OK)
+#             except User.DoesNotExist:
+#                 error_response = {
+#                     "status": status.HTTP_400_BAD_REQUEST,
+#                     "errorMessage": "Invalid email address"
+#                 }
+#                 return Response(data=error_response, status=status.HTTP_400_BAD_REQUEST)
+#         else:
+#             error_messages = []
+#             for field, errors in serializer.errors.items():
+#                 for error in errors:
+#                     error_messages.append(f"{field}: {error}")
+#             error_message_str = " ".join(error_messages)
+            
+#             error_response = {
+#                 "status": status.HTTP_400_BAD_REQUEST,
+#                 "errorMessage": error_message_str
+#             }
+#             return Response(data=error_response, status=status.HTTP_400_BAD_REQUEST)
+                
+        
+
+
+
+# class PasswordResetConfirmView(APIView):
+#     def post(self, request):
+#         token = request.query_params.get('token')
+#         serializer = PasswordResetSerializer(data={**request.data, 'token': token})
+#         if serializer.is_valid():
+#             try:
+#                 UntypedToken(token)
+#                 user_id = UntypedToken(token).payload['user_id']
+#                 user = User.objects.get(id=user_id)
+#                 user.set_password(serializer.validated_data['new_password'])
+#                 user.save()
+#                 return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
+#             except Exception as e:
+#                 error_response = {
+#                     "status": status.HTTP_400_BAD_REQUEST,
+#                     "errorMessage": "Invalid token"
+#                 }
+#                 return Response(data=error_response ,status=status.HTTP_400_BAD_REQUEST)
+#         else:
+#             error_messages = []
+#             for field, errors in serializer.errors.items():
+#                 for error in errors:
+#                     error_messages.append(f"{field}: {error}")
+#             error_message_str = " ".join(error_messages)
+            
+#             error_response = {
+#                 "status": status.HTTP_400_BAD_REQUEST,
+#                 "errorMessage": error_message_str
+#             }
+#             return Response(data=error_response, status=status.HTTP_400_BAD_REQUEST)
