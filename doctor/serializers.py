@@ -55,8 +55,14 @@ class FavoriteDoctorSerializer(serializers.ModelSerializer):
 
 
 class FavoriteDoctorListSerializer(serializers.ModelSerializer):
-    doctor = serializers.SlugRelatedField(slug_field='id', read_only=True)
+    doctor = DoctorSerializer(read_only=True)
 
     class Meta:
         model = FavoriteDoctor
         fields = ['doctor']
+
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        doctor_representation = representation.pop('doctor')
+        return doctor_representation
